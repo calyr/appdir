@@ -11,5 +11,7 @@ class AddressRepository {
 
   Future updateTodo(Address address) => databaseController.updateAddress(address);
 
-  Future deleteTodo(int index) => databaseController.deleteAddress(index);
+  Future deleteTodo(String index) => databaseController.deleteAddress(index);
+
+  Future findAddress(String index) => databaseController.findAddress(index);
 }

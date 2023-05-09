@@ -31,10 +31,15 @@ class DatabaseProvider {
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute("CREATE TABLE address ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "id TEXT PRIMARY KEY, "
             "name TEXT, "
             "street TEXT, "
             "number_of TEXT, "
+            "postal_code TEXT, "
+            "name_state TEXT, "
+            "municipality TEXT, "
+            "settlement TEXT, "
+            "additional TEXT, "
             "checked_by INTEGER "
             ")");
       },

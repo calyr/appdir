@@ -25,10 +25,17 @@ class DatabaseController {
     return result;
   }
 
-  Future<int> deleteAddress(int id) async {
+  Future<int> deleteAddress(String id) async {
     final db = await dbClient.db;
     var result = await db.delete("address", where: 'id = ?', whereArgs: [id]);
 
     return result;
+  }
+
+  Future<Address?> findAddress(String id) async {
+    final db = await dbClient.db;
+    var result = await db.query("address",where: "id = ?", whereArgs: [id]);
+    List<Address> todos = result.isNotEmpty ? result.map((item) => Address.fromJSON(item)).toList() : [];
+    return todos[0];
   }
 }

@@ -1,10 +1,8 @@
 
-import 'dart:ffi';
-
 class Address {
-  final int? id;
-  final String? name;
-  final String? street;
+  String? id;
+  String? name;
+  String? street;
   String? numberOf;
   String? postalCode;
   String? nameState;
@@ -13,21 +11,20 @@ class Address {
   String? additional;
   bool? checkedBy;
 
-  Address({this.id, this.name, this.street}) {
-    this.numberOf = "";
-    this.postalCode = "";
-    this.nameState = "";
-    this.municipality = "";
-    this.settlement = "";
-    this.additional = "";
-    this.checkedBy = false;
-  }
+  Address(
+      {this.id, this.name, this.street, this.numberOf, this.postalCode, this.nameState, this.municipality, this.settlement, this.additional, this.checkedBy}) {}
 
   factory Address.fromJSON(Map<String, dynamic> json) {
     return Address(
         id: json['id'],
         name: json['name'],
-        street: json['street']);
+        street: json['street'],
+        postalCode: json['postal_code'],
+        nameState: json['name_state'],
+        municipality: json['municipality'],
+        settlement: json['settlement'],
+        additional: json['additional'],
+        numberOf: json['number_of']);
   }
 
   Map<String, dynamic> toJSON() {
@@ -36,7 +33,12 @@ class Address {
       'name': name,
       'street': street,
       'number_of': numberOf,
-      'checked_by': checkedBy == true? 1: 0
+      'postal_code': postalCode,
+      'name_state': nameState,
+      'municipality': municipality,
+      'settlement': settlement,
+      'additional': additional,
+      'checked_by': checkedBy == true ? 1 : 0
     };
   }
 }
