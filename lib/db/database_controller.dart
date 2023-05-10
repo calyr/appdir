@@ -38,4 +38,10 @@ class DatabaseController {
     List<Address> todos = result.isNotEmpty ? result.map((item) => Address.fromJSON(item)).toList() : [];
     return todos[0];
   }
+
+  Future<int> updateAddressCheckedToFalse() async {
+    final db = await dbClient.db;
+    var result = await db.update("address", {'checked_by': 0},where: "checked_by = ?", whereArgs: [1]);
+    return result;
+  }
 }

@@ -24,6 +24,7 @@ class Address {
         municipality: json['municipality'],
         settlement: json['settlement'],
         additional: json['additional'],
+        checkedBy: json['checked_by'] == 1? true: false,
         numberOf: json['number_of']);
   }
 

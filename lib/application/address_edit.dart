@@ -1,19 +1,21 @@
 import 'package:appdir/bloc/address_cubit.dart';
 import 'package:appdir/bloc/address_state.dart';
+import 'package:appdir/domain/address.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 class AddressEditPage extends StatelessWidget{
-  AddressEditPage({this.id});
-  String? id;
+  AddressEditPage({this.addressParam});
+  Address? addressParam;
 
   @override
   Widget build(BuildContext context) {
     return
         BlocProvider(
           create: (_) => AddressCubit(),
-          child: AddressEditView(id: this.id),
+          child: AddressEditView(addressParam: this.addressParam),
 
     );
   }
@@ -26,15 +28,15 @@ class AddressEditView extends StatelessWidget {
   var uuid = Uuid();
   AddressEditView({
     Key? key,
-    this.id,
+    this.addressParam,
   }) : super(key: key) {
   }
-  final String? id;
+  Address? addressParam;
   String optionSelected = '-';
   @override
   Widget build(BuildContext context) {
-    if(this.id != null) {
-      context.read<AddressCubit>().findAddress(this.id!!);
+    if(this.addressParam != null) {
+      context.read<AddressCubit>().findAddress(this.addressParam!.id!);
     }
     return BlocBuilder<AddressCubit, AddressState>(
       builder: (context, state) {
@@ -42,12 +44,12 @@ class AddressEditView extends StatelessWidget {
           child: Builder(builder: (context) {
             return Scaffold(
               appBar: AppBar(
-                title: Text(id == null ? 'Create Address' : 'Edit Address'),
+                title: Text(this.addressParam == null ? 'Create Address' : 'Edit Address'),
               ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {
                   if (Form.of(context)!.validate()) {
-                    if( this.id == null) {
+                    if( this.addressParam == null) {
                       context.read<AddressCubit>().addAddress();
                     } else {
                       context.read<AddressCubit>().updateAddress();
@@ -56,7 +58,7 @@ class AddressEditView extends StatelessWidget {
                    }
                 },
                 icon: const Icon(Icons.save),
-                label: Text( id == null ? 'Save': 'Editar'),
+                label: Text( this.addressParam == null ? 'Save': 'Editar'),
               ),
               floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
               body: ListView(
@@ -66,7 +68,10 @@ class AddressEditView extends StatelessWidget {
                 ),
                 children: [
                   TextFormField(
-                    initialValue: state.address.name,
+                    initialValue: addressParam == null? "": addressParam!.name,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(128),
+                    ],
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       label: Text('Name'),
@@ -80,7 +85,10 @@ class AddressEditView extends StatelessWidget {
                   const SizedBox(height: 16),
                   TextFormField(
                     keyboardType: TextInputType.streetAddress,
-                    initialValue: state.address.street,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(128),
+                    ],
+                    initialValue: addressParam == null? "": addressParam!.street,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       label: Text('Street'),
@@ -94,7 +102,7 @@ class AddressEditView extends StatelessWidget {
                   const SizedBox(height: 16),
                   TextFormField(
                     keyboardType: TextInputType.number,
-                    initialValue: state.address.numberOf,
+                    initialValue: addressParam == null? "": addressParam!.numberOf,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       label: Text('Number'),
@@ -108,7 +116,10 @@ class AddressEditView extends StatelessWidget {
                   const SizedBox(height: 16),
                   TextFormField(
                     keyboardType: TextInputType.number,
-                    initialValue: state.address.postalCode,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(5),
+                    ],
+                    initialValue: addressParam == null? "": addressParam!.postalCode,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       label: Text('Postal Code'),
@@ -123,22 +134,25 @@ class AddressEditView extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Row(children: [
-                    Text("State: "),
-                    Text(state.address.nameState == null? "":state.address.nameState.toString())
-                  ],),
+
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(children: [
+                        Text("State: ", style: TextStyle(fontSize: 12),),
+                        Text(state.address.nameState == null? "":state.address.nameState.toString())
+                      ],),
+                      Column(children: [
+                        Text("Municipality: ", style: TextStyle(fontSize: 12),),
+                        Text(state.address.municipality == null ? "": state.address.municipality.toString() )
+                      ],),
+                    ],
+                  ),
                   const SizedBox(height: 16),
-                  Row(children: [
-                    Text("Municipality: "),
-                    Text(state.address.municipality == null ? "": state.address.municipality.toString() )
-                  ],),
-                  const SizedBox(height: 16),
-                  Row(children: [
+                  Column(children: [
                     Text("Settlement: "),
                     DropdownButton<String>(
-                      // Step 3.
                       value: state.address.settlement,
-                      // Step 4.
                       items: state.settlementList.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
@@ -148,20 +162,28 @@ class AddressEditView extends StatelessWidget {
                           ),
                         );
                       }).toList(),
-                      // Step 5.
                       onChanged: (String? newValue) {
-
                         context.read<AddressCubit>().changeSettlementList(newValue);
-                        // setState(() {
-                        //   dropdownValue = newValue!;
-                        // });
                       },
                     )
                   ],),
-                  id != null ? ElevatedButton(
+                  const SizedBox(height: 16),
+                 Row(
+                   children: [
+                     Text("Default Address:"),
+                     Checkbox(
+                        checkColor: Colors.white,
+                        value: state.address.checkedBy == null ? false: state.address.checkedBy,
+                        onChanged: (bool? value) {
+                          context.read<AddressCubit>().changeDefaultAddress(value);
+                        },
+                     ),
+                   ],
+                 ),
+                  this.addressParam != null ? ElevatedButton(
                     onPressed: () {
                       context.read<AddressCubit>().deleteAddres();
-
+                      Navigator.pop(context);
                     },
                     child: const Text('Delete'),
                   ): const SizedBox(height: 0)

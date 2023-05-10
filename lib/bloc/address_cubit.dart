@@ -21,19 +21,25 @@ class AddressCubit extends Cubit<AddressState> {
 
   void loading() async {
     final data =  await db.getAllAddress();
-
-    emit(AddressSuccess(list: data, address: this.address, settlementList: [] ));
+    this.list = data;
+    emit(AddressListSuccess(list: list));
   }
   List<String> settlementList = [];
   void addAddress() async {
     this.address.id = uuid.v4();
+    if(this.address.checkedBy == null) {
+      this.address.checkedBy = false;
+    }
+    if(this.address.checkedBy == true) {
+      await db.updateAddressCheckedToFalse();
+    }
     await db.createAddress(this.address);
     loading();
   }
 
   void getDataSource(postalCode) async {
     Epomex epomexData = await getEpomex(postalCode);
-    this.address.nameState = epomexData.nameState;
+    this.address.nameState = utf8.decode((epomexData.nameState.runes.toList()));
     this.address.municipality = epomexData.municipality;
     this.address.settlement = epomexData.settlement[0];
     this.address.postalCode = postalCode;
@@ -52,7 +58,7 @@ class AddressCubit extends Cubit<AddressState> {
     final stateList = jsonDecode(dataResponse.body);
     List<String> settlementListTemp = [];
     for( Map<String, dynamic> a in stateList) {
-      settlementListTemp.add(a["asentamiento"]);
+      settlementListTemp.add(utf8.decode(a["asentamiento"].runes.toList()));
     }
     epomex = Epomex(nameState: stateList[0]["estado"], municipality: stateList[0]["municipio"], settlement: settlementListTemp);
 
@@ -93,6 +99,10 @@ class AddressCubit extends Cubit<AddressState> {
   }
 
   void updateAddress() async {
+
+    if(this.address.checkedBy == true) {
+      await db.updateAddressCheckedToFalse();
+    }
     await db.updateAddress(this.address);
     final data =  await db.getAllAddress();
     emit(AddressSuccess(list: data, address: this.address, settlementList: [] ));
@@ -101,6 +111,13 @@ class AddressCubit extends Cubit<AddressState> {
   void deleteAddres() async {
     await db.deleteAddress(this.address.id.toString());
     final data =  await db.getAllAddress();
+    this.list = data;
+
     emit(AddressSuccess(list: data, address: this.address, settlementList: [] ));
+  }
+
+  void changeDefaultAddress(bool? value) {
+    this.address.checkedBy = value;
+    emit(AddressSuccess(list: list, address: this.address, settlementList: this.settlementList));
   }
 }

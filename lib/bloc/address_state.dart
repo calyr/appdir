@@ -22,3 +22,14 @@ class AddressSuccess extends AddressState {
   ];
 
 }
+
+class AddressListSuccess extends AddressState {
+  AddressListSuccess({required this.list}): super(true, list, Address() ,[], "");
+
+  final List<Address> list;
+  @override
+  List<Object> get props => [
+    list
+  ];
+
+}

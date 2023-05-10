@@ -1,9 +1,7 @@
 import 'package:appdir/application/address_edit.dart';
 import 'package:appdir/bloc/address_state.dart';
-import 'package:appdir/domain/address.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:routemaster/routemaster.dart';
 
 import '../bloc/address_cubit.dart';
 
@@ -30,29 +28,46 @@ class AddressListView extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: BlocBuilder<AddressCubit, AddressState>(
-        builder: (context, state){
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 32,
-            ),
-            restorationId: 'sampleItemListView',
-            itemCount: state.list.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (BuildContext context, int index) {
-              final address = state.list[index];
+        builder: (context, state) {
+          if(state is AddressListSuccess) {
+            context.read<AddressCubit>().loading();
 
-              return ListTile(
-                title: Text('Name: ${address.name}, Street: ${address.street},"#: ${address.numberOf}'),
-                leading:
-                  Text(address.postalCode.toString()),
-                subtitle: Text('State: ${address.nameState.toString()}, Settlement: ${address.settlement}' ),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddressEditPage(id: "${address.id}")));
-                },
-              );
-            },
-          );
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 32,
+              ),
+              itemCount: state.list.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemBuilder: (BuildContext context, int index) {
+                final address = state.list[index];
+
+                return ListTile(
+                  title: Text('Checked ${address.checkedBy}, Name: ${address.name}, Street: ${address.street},"#: ${address.numberOf}'),
+                  trailing: Checkbox(
+                    checkColor: Colors.white,
+                    value: address.checkedBy == null ? false: address.checkedBy,
+                    onChanged: (bool? value) {
+                    },
+                  ),
+                  leading:
+                  Column(
+                    children: [
+                      Text(address.postalCode.toString()),
+
+                    ],
+                  ),
+                  subtitle: Text('State: ${address.nameState.toString()}, Settlement: ${address.settlement}' ),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AddressEditPage(addressParam: address)));
+                  },
+                );
+              },
+            );
+          } else {
+            return Container();
+          }
+
         },
       )
     );
